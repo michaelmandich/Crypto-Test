@@ -15,7 +15,11 @@ class Node:
         current = self
         for c in hex_str:
             current = current.children[c]
+        if current.hex_value is not None:
+            print(f"Duplicate value found: {hex_str}")
+            return False
         current.hex_value = hex_str
+        return True
 
     def write_tree_to_csv(self, csv_writer, prefix=""):
         if self.hex_value is not None:
@@ -33,17 +37,16 @@ if len(sys.argv) < 2:
 num_random_hex_strings = int(sys.argv[1])
 
 tree = Node()
+unique_count = 0
 for _ in range(num_random_hex_strings):
     random_hex = generate_random_hex(256 // 4)
-    tree.insert(random_hex)
-
-end_time = time.time()
-duration = end_time - start_time
-
-print("The Python script took {:.2f} seconds to run at ".format(duration) + str(num_random_hex_strings) + " keys")
-
+    if tree.insert(random_hex):
+        unique_count += 1
 # Write the tree to a CSV file
-output_filename = f"Python_{num_random_hex_strings}_values.csv"
+output_filename = f"Python_{unique_count}_values.csv"
 with open(output_filename, "w", newline="") as file:
     csv_writer = csv.writer(file)
     tree.write_tree_to_csv(csv_writer)
+end_time = time.time()
+duration = end_time - start_time
+print("The Python script took {:.2f} seconds to run at ".format(duration) + str(unique_count) + " unique keys")
