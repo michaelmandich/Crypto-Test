@@ -17,7 +17,7 @@ Node* new_node() {
     return node;
 }
 
-void insert(Node* node, const char* hex_str) {
+int insert(Node* node, const char* hex_str) {
     for (size_t i = 0; i < strlen(hex_str); i++) {
         int idx = hex_str[i] >= 'a' ? hex_str[i] - 'a' + 10 : hex_str[i] - '0';
         if (!node->children[idx]) {
@@ -25,7 +25,12 @@ void insert(Node* node, const char* hex_str) {
         }
         node = node->children[idx];
     }
+    if (node->hex_value) {
+        printf("Duplicate value found: %s\n", hex_str);
+        return 0;
+    }
     node->hex_value = strdup(hex_str);
+    return 1;
 }
 
 void write_tree_to_csv(FILE* file, Node* node) {
@@ -70,20 +75,21 @@ int main(int argc, char* argv[]) {
     Node* tree = new_node();
     char random_hex[65];
     clock_t start_time = clock();
+    int unique_count = 0;
 
     for (int i = 0; i < num_random_hex_strings; i++) {
         generate_random_hex(random_hex, sizeof(random_hex) - 1);
-        insert(tree, random_hex);
+        unique_count += insert(tree, random_hex);
     }
 
     clock_t end_time = clock();
     double duration = (double)(end_time - start_time) / CLOCKS_PER_SEC;
 
-    printf("The script took %.2f seconds to run at %d keys.\n", duration, num_random_hex_strings);
+    printf("The script took %.2f seconds to run at %d unique keys.\n", duration, unique_count);
 
     // Write the tree to a CSV file
     char output_filename[64];
-    snprintf(output_filename, sizeof(output_filename), "Coutput_%d_values.csv", num_random_hex_strings);
+    snprintf(output_filename, sizeof(output_filename), "Coutput_%d_unique_values.csv", unique_count);
     FILE* file = fopen(output_filename, "w");
     if (file == NULL) {
         perror("Failed to open the output file");
